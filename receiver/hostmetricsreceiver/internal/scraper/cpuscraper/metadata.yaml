@@ -38,7 +38,7 @@ metrics:
     attributes: [cpu.frequency]
 
   system.cpu.logical.count:
-    enabled: false
+    enabled: true
     description: Number of available logical CPUs.
     unit: "{cpu}"
     stability: development

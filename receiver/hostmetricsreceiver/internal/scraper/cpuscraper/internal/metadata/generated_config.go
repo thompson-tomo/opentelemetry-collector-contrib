@@ -211,7 +211,7 @@ func DefaultMetricsConfig() MetricsConfig {
 			EnabledAttributes:   []SystemCPUFrequencyMetricAttributeKey{SystemCPUFrequencyMetricAttributeKeyCPUFrequency},
 		},
 		SystemCPULogicalCount: SystemCPULogicalCountMetricConfig{
-			Enabled: false,
+			Enabled: true,
 		},
 		SystemCPUPhysicalCount: SystemCPUPhysicalCountMetricConfig{
 			Enabled: false,
