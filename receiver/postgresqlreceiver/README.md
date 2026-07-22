@@ -131,6 +131,64 @@ separately. This could lead some resources usage and limit this will reduce the 
 This defines the cache's size for query plan.
 - `query_plan_cache_ttl`: (optional, default=1h). How long before the query plan cache got expired. Example values: `1m`, `1h`. 
 - `collection_interval`: (optional, default=60s). This receiver can collect top_query metrics on an interval. If not provided then the global collection_interval takes effect. This value must be a string readable by Golang's [time.ParseDuration](https://pkg.go.dev/time#ParseDuration). Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`.
+
+### Vector Metrics
+
+The receiver can report [pgvector](https://github.com/pgvector/pgvector) similarity-search and insert activity
+through a set of opt-in metrics.
+
+Prerequisites:
+
+- PostgreSQL 13 or later.
+- The [pgvector](https://github.com/pgvector/pgvector) extension installed in each scanned database. The `l1`,
+  `hamming`, and `jaccard` distance functions additionally require pgvector 0.7.0 or later.
+- The `pg_stat_statements` extension (version 1.8+) installed and enabled in each scanned database (see below).
+
+#### Search metrics
+
+Three metrics report similarity-search activity
+
+- `postgresql.vector.search.calls`: the cumulative number of vector search executions.
+- `postgresql.vector.search.duration`: the cumulative execution time (in seconds) of vector searches.
+- `postgresql.vector.search.rows_returned`: the cumulative number of rows returned by vector searches.
+
+> [!NOTE]
+> The distance function is inferred from the query text alone, so the receiver cannot tell which
+> operator implementation is actually invoked. If the `pg_trgm` extension is also installed, its
+> text-similarity `<->` operator is indistinguishable from pgvector's L2 `<->` operator, so queries
+> such as `ORDER BY text_col <-> 'abc'` may be counted under the `l2` distance function.
+
+#### Insert metrics
+
+These metrics report write activity against pgvector tables
+
+- `postgresql.vector.insert.rows`: the cumulative number of vectors inserted.
+- `postgresql.vector.insert.duration`: the cumulative execution time (in seconds) of those inserts.
+
+All of these metrics are disabled by default. Enable the ones you need via:
+
+```yaml
+receivers:
+  postgresql:
+    metrics:
+      postgresql.vector.search.calls:
+        enabled: true
+      postgresql.vector.search.duration:
+        enabled: true
+      postgresql.vector.search.rows_returned:
+        enabled: true
+      postgresql.vector.insert.rows:
+        enabled: true
+      postgresql.vector.insert.duration:
+        enabled: true
+```
+
+The `pg_stat_statements` extension must be created in every database you want these metrics collected from:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+```
+
 ### Example Configuration
 
 ```yaml
